@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trajets Valmorel</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#111;--mute:#6b7280;--line:#e5e7eb;--soft:#f3f4f6;--sel:#1D9BF0;--ok:#008000;--warn:#c2410c;--ret:#8b5cf6}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1013;--card:#181b20;--ink:#f3f4f6;--mute:#9ca3af;--line:#2a2f36;--soft:#21252b;--warn:#fb923c;--ret:#a78bfa}}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 'Plus Jakarta Sans',system-ui,sans-serif}
+.wrap{max-width:1500px;margin:0 auto;padding:20px 16px 110px}
+h1{font-size:30px;font-weight:600;margin:0 0 4px}
+.sub{color:var(--mute);max-width:900px}
+.info{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12px}
+.top{text-align:center;margin:4px 0 20px}
+.how{margin:6px 0 14px;color:var(--mute)}
+.wid{display:grid;grid-template-columns:repeat(3,minmax(0,260px));gap:12px;justify-content:center}
+.w{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 14px;text-align:left}
+.w span{font-size:12px;color:var(--mute);display:block}
+.w b{font-size:16px;font-weight:600;display:block}
+.w small{font-size:12px;color:var(--mute)}
+@media (max-width:700px){.wid{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start}
+.col h2{font-size:18px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:999px;background:var(--sel)}
+.dot.r{background:var(--ret)}
+.opt{background:var(--card);border:2px solid var(--line);border-radius:20px;margin-bottom:10px;overflow:hidden}
+.opt.on{border-color:var(--sel)}
+.ret .opt.on{border-color:var(--ret)}
+.head{padding:12px 14px;cursor:pointer;user-select:none}
+.row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.mode{font-weight:600}
+.prix{font-size:22px;font-weight:600;white-space:nowrap}
+.prix small{font-size:12px;font-weight:400;color:var(--mute)}
+.hrs{display:flex;align-items:center;gap:8px;margin:6px 0 2px;font-weight:500}
+.hrs i{flex:1;height:2px;background:var(--line);border-radius:2px}
+.meta{color:var(--mute);font-size:12px}
+.tags{margin-top:6px}
+.tag{display:inline-block;font-size:12px;border-radius:999px;padding:1px 9px;margin:0 6px 4px 0;border:1px solid var(--line)}
+.tag.best{background:var(--ok);color:#fff;border-color:var(--ok)}
+.tag.warn{color:var(--warn);border-color:var(--warn)}
+.more{font-size:12px;color:var(--sel);margin-top:4px}
+.ret .more{color:var(--ret)}
+.detail{display:none;border-top:1px solid var(--line);background:var(--soft);padding:10px 14px 14px}
+.opt.open .detail{display:block}
+.leg{display:grid;grid-template-columns:48px 1fr auto;gap:2px 10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.leg .t{font-weight:600}
+.leg .what{font-weight:500}
+.leg .dir{color:var(--mute);font-size:12px}
+.leg .pp{text-align:right;font-weight:600;white-space:nowrap}
+.leg .pp small{display:block;font-weight:400;color:var(--mute);font-size:12px;white-space:normal;max-width:140px;margin-left:auto}
+.leg a{grid-column:2 / 4;justify-self:start;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;margin-top:4px;color:var(--ink);background:var(--card);text-decoration:none}
+.sum{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:13px}
+.sum b{font-weight:600}
+.side{position:sticky;top:12px}
+.box{background:var(--card);border-radius:20px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--line)}
+.box h3{margin:0 0 8px;font-size:16px;font-weight:600}
+.big{display:flex;gap:22px;align-items:baseline;margin-bottom:6px}
+.big b{font-size:30px;font-weight:600}
+.big span{color:var(--mute);font-size:12px;display:block}
+.steps{list-style:none;margin:0;padding:0}
+.steps li{display:grid;grid-template-columns:48px 14px 1fr;gap:8px;padding:3px 0}
+.steps .t{font-weight:600;text-align:right}
+.steps .b{width:12px;height:12px;border-radius:999px;margin-top:4px;background:var(--sel)}
+.steps .b.r{background:var(--ret)}
+.steps small{display:block;color:var(--mute);font-size:12px}
+.steps .sep{display:block;border-top:1px dashed var(--line);margin:6px 0}
+#map{height:250px;border-radius:20px;overflow:hidden}
+.note{color:var(--mute);font-size:12px;margin-top:8px}
+.bar{display:none}
+@media (max-width:1100px){.grid{grid-template-columns:1fr 1fr}.side{grid-column:1 / 3;position:static}}
+@media (max-width:700px){
+ h1{font-size:24px}
+ .grid{grid-template-columns:1fr}.side{grid-column:auto}
+ .prix{font-size:20px}
+ .bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:1000;background:var(--ink);color:var(--bg);padding:12px 16px;justify-content:space-between;align-items:center;gap:10px}
+ .bar b{font-size:20px;font-weight:600}
+ .bar span{font-size:12px;opacity:.75;display:block}
+ .bar a{color:var(--bg);border:1px solid var(--bg);border-radius:999px;padding:6px 12px;font-size:13px;text-decoration:none;white-space:nowrap}
+ #totbox{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Lille - Valmorel</h1>
+    <p class="how">Choisis un aller et un retour, puis touche une option pour voir le détail du prix.</p>
+    <div class="wid">
+      <div class="w"><span>Aller</span><b>dim. 27 au soir ou lun. 28/12</b><small>chalet disponible dès le lundi</small></div>
+      <div class="w"><span>Retour</span><b>dim. 03/01 ou sam. 02/01</b><small>chalet libéré le dimanche avant 18h</small></div>
+      <div class="w"><span>Voyageurs</span><b>3 personnes</b><small>Philibert avec Carte Avantage Jeune</small></div>
+    </div>
+  </header>
+  <div class="grid">
+    <div class="col"><h2><span class="dot"></span>Aller</h2><div id="aller"></div></div>
+    <div class="col ret"><h2><span class="dot r"></span>Retour</h2><div id="retour"></div></div>
+    <div class="side" id="trajet">
+      <div class="box" id="totbox"><div class="big"><div><b id="tot3"></b><span>pour vous 3, tout compris</span></div><div><b id="totpp"></b><span>en moyenne par personne</span></div></div><div class="meta" id="split"></div></div>
+      <div class="box"><h3>Ton trajet</h3><ul class="steps" id="steps"></ul></div>
+      <div id="map"></div>
+      <div class="note">Prix relevés le 02/11/2026 entre 11h et 12h, en 2de classe : ils bougent, à revérifier en réservant. Horaires du bus S62 : ceux de l'hiver dernier (2026-2027 pas encore publiés). Ticket TCL à Lyon non compté.</div>
+    </div>
+  </div>
+</div>
+<div class="bar"><div><b id="mtot"></b><span id="mpp"></span></div><a href="#trajet">Voir le trajet</a></div>
+
+<script>
+/* ---------- liens de réservation déjà remplis ---------- */
+const FBID={lille:'40deaa9f-8646-11e6-9066-549f350fcb0c',paris:'40de8964-8646-11e6-9066-549f350fcb0c',lyon:'40df89c1-8646-11e6-9066-549f350fcb0c',moutiers:'40e02a44-8646-11e6-9066-549f350fcb0c'};
+const TLID={lilleE:4653,lilleF:123,pgl:4924,lyonPD:4676,moutiers:5038};
+const fb=(f,t,d)=>['Voir sur FlixBus',`https://shop.flixbus.fr/search?departureCity=${FBID[f]}&arrivalCity=${FBID[t]}&rideDate=${d}&adult=3&_locale=fr`];
+const tl=(f,t,dt)=>['Voir sur Trainline',`https://www.thetrainline.com/book/results?journeySearchType=single&origin=urn%3Atrainline%3Ageneric%3Aloc%3A${TLID[f]}&destination=urn%3Atrainline%3Ageneric%3Aloc%3A${TLID[t]}&outwardDate=${encodeURIComponent(dt)}&outwardDateType=departAfter&selectedTab=train&passengers%5B%5D=2006-02-02&passengers%5B%5D=2006-02-02&passengers%5B%5D=2006-02-02&lang=fr`];
+const kb=(d,f,t,fi,ti)=>['Voir sur Kombo (BlaBlaCar Bus)',`https://www.kombo.co/fr/app/outward/3/${fi}/${ti}/${d}/${f}/${t}/0/0/results`];
+const ALTI=['Réserver le bus S62 (Altibus)','https://booking.altibus.com/Reservation'];
+
+/* ---------- étapes réutilisées ---------- */
+/* n = prix par personne sans carte (Sofian, Jules), c = avec carte (Philibert), null = inclus dans le billet de l'étape d'avant */
+const S62A=dep=>({t:dep,lieu:'Moûtiers, gare routière (à côté de la gare)',what:'Bus S62',dir:'direction Valmorel, descendre au terminus Crève Coeur (40 min)'+(dep==='18:30'?' ; bus de 18:30 sur réservation la veille avant 12h':''),n:6.75,cn:'moitié de l\'aller-retour jeune (13,50 € en ligne)',link:ALTI});
+const S62R=dep=>({t:dep,lieu:'Valmorel',what:'Bus S62',dir:'direction Moûtiers gare (40 min)',n:6.75,cn:'moitié de l\'aller-retour jeune (13,50 € en ligne)',link:ALTI});
+const M14A={t:'',lieu:'Paris Bercy Seine, 210 quai de Bercy',what:'Métro 14',dir:'à Cour Saint-Émilion, direction Saint-Denis Pleyel, 2 arrêts jusqu\'à Gare de Lyon (ou 25 min à pied)',n:2.55};
+const M14R={t:'',lieu:'Paris Gare de Lyon',what:'Métro 14',dir:'direction Aéroport d\'Orly, 2 arrêts jusqu\'à Cour Saint-Émilion, puis 5 min à pied jusqu\'au quai de Bercy',n:2.55};
+const RERA={t:'',lieu:'Paris Gare du Nord',what:'RER D',dir:'direction Melun, Malesherbes ou Corbeil-Essonnes, 1 arrêt jusqu\'à Gare de Lyon',n:2.55};
+const RERR={t:'',lieu:'Paris Gare de Lyon',what:'RER D',dir:'direction Creil ou Orry-la-Ville, 1 arrêt jusqu\'à Gare du Nord',n:2.55};
+
+const KBN='prix Kombo, frais compris : sur Kombo, clique l\'onglet « Bus » en haut des résultats, le car de 03:00 y est';
+const ALLER=[
+ {m:'FlixBus de nuit + TER',jour:'dim. 27 au soir',dep:'19:50',arr:'12:10',d:'16h20',route:['lille','lyon','chambery','moutiers'],
+  legs:[{t:'19:50',lieu:'Lille Europe, boulevard de Turin',what:'FlixBus',dir:'direction Lyon, direct, descendre à Lyon Gerland lun. 28 à 04:50',n:55.99,link:fb('lille','lyon','27.12.2026')},
+   {t:'',lieu:'Lyon Gerland',what:'Métro B',dir:'premier métro, à Stade de Gerland, direction Charpennes, jusqu\'à Gare Part-Dieu (15 min)',n:0,cn:'ticket TCL non compté'},
+   {t:'06:20',lieu:'Lyon Part-Dieu',what:'TER',dir:'1 changement, descendre à Moûtiers (09:48)',n:22.60,cn:'tarif promo, 67,80 € pour 3 sur Trainline',link:tl('lyonPD','moutiers','2026-12-28T06:00:00')},S62A('11:30')]},
+ {m:'FlixBus de nuit + TER (plus tard)',jour:'dim. 27 au soir',dep:'21:55',arr:'12:10',d:'14h15',route:['lille','lyon','chambery','moutiers'],
+  legs:[{t:'21:55',lieu:'Lille Europe, boulevard de Turin',what:'FlixBus',dir:'direction Lyon, direct, descendre à Lyon Gerland lun. 28 à 06:50',n:62.99,link:fb('lille','lyon','27.12.2026')},
+   {t:'',lieu:'Lyon Gerland',what:'Métro B',dir:'à Stade de Gerland, direction Charpennes, jusqu\'à Gare Part-Dieu (15 min)',n:0,cn:'ticket TCL non compté'},
+   {t:'08:08',lieu:'Lyon Part-Dieu',what:'TER',dir:'1 changement, descendre à Moûtiers (11:10)',n:25,cn:'tarif promo, 75 € pour 3 sur Trainline',link:tl('lyonPD','moutiers','2026-12-28T08:00:00')},S62A('11:30')]},
+ {m:'BlaBlaCar Bus + TER',jour:'lun. 28',dep:'03:00',arr:'19:10',d:'16h10',route:['lille','paris','lyon','chambery','moutiers'],warn:'Bus S62 de 18:30 sur réservation',
+  legs:[{t:'03:00',lieu:'Lille Europe, boulevard de Turin',what:'BlaBlaCar Bus',dir:'direction Lyon, changement de car à Paris Bercy (06:10, repart 07:30), descendre à Lyon Gerland (13:40)',n:47.98,cn:KBN,link:kb('2026-12-28','Lille','Lyon',11,18)},
+   {t:'13:40',lieu:'Lyon Gerland',what:'Métro B',dir:'à Stade de Gerland, direction Charpennes, jusqu\'à Gare Part-Dieu (15 min)',n:0,cn:'ticket TCL non compté'},
+   {t:'14:50',lieu:'Lyon Part-Dieu',what:'TER 18517 puis TER 883133',dir:'direction Chambéry, changement à Chambéry (16:16, repart 16:53), direction Bourg-Saint-Maurice, descendre à Moûtiers (18:10)',n:22.60,cn:'tarif promo, 67,80 € pour 3 sur Trainline',link:tl('lyonPD','moutiers','2026-12-28T14:30:00')},S62A('18:30')]},
+ {m:'FlixBus + OUIGO + TER',jour:'lun. 28',dep:'08:10',arr:'19:10',d:'11h00',route:['lille','paris','lyon','chambery','moutiers'],warn:'Bus S62 de 18:30 sur réservation',
+  legs:[{t:'08:10',lieu:'Lille Europe, boulevard de Turin',what:'FlixBus',dir:'direction Paris, descendre à Paris Bercy Seine (11:15)',n:14.99,link:fb('lille','paris','28.12.2026')},M14A,
+   {t:'12:30',lieu:'Paris Gare de Lyon',what:'OUIGO 7803',dir:'descendre à Lyon Part-Dieu (14:30), même gare pour le TER',n:39,cn:'à réserver sur ouigo.com, Trainline ne le propose pas',link:['Voir sur OUIGO','https://www.ouigo.com/']},
+   {t:'14:50',lieu:'Lyon Part-Dieu',what:'TER 18517 puis TER 883133',dir:'direction Chambéry, changement à Chambéry (16:16, repart 16:53), direction Bourg-Saint-Maurice, descendre à Moûtiers (18:10)',n:22.60,cn:'tarif promo, 67,80 € pour 3 sur Trainline',link:tl('lyonPD','moutiers','2026-12-28T14:30:00')},S62A('18:30')]},
+ {m:'FlixBus + OUIGO direct',jour:'lun. 28',dep:'06:40',arr:'16:40',d:'10h00',route:['lille','paris','moutiers'],
+  legs:[{t:'06:40',lieu:'Lille Europe, boulevard de Turin',what:'FlixBus',dir:'direction Paris, descendre à Paris Bercy Seine (09:50)',n:14.99,link:fb('lille','paris','28.12.2026')},M14A,
+   {t:'10:46',lieu:'Paris Gare de Lyon',what:'OUIGO 7891',dir:'direction Bourg-Saint-Maurice, descendre à Moûtiers (15:40), direct',n:85,cn:'255 € pour 3 sur Trainline',link:tl('pgl','moutiers','2026-12-28T10:00:00')},S62A('16:00')]},
+ {m:'TGV + OUIGO',jour:'lun. 28',dep:'08:12',arr:'16:40',d:'8h28',route:['lille','paris','moutiers'],
+  legs:[{t:'08:12',lieu:'Lille Flandres',what:'TGV INOUI 7014 puis OUIGO 7891',dir:'descendre à Paris Gare du Nord (09:14), puis OUIGO 10:46 Paris Gare de Lyon, direction Bourg-Saint-Maurice, descendre à Moûtiers (15:40)',n:119,c:108.50,cn:'Trainline affiche 357 € pour 3 sans carte',link:tl('lilleF','moutiers','2026-12-28T08:00:00')},RERA,S62A('16:00')]},
+ {m:'TGV via Paris',jour:'lun. 28',dep:'05:52',arr:'14:10',d:'8h18',route:['lille','paris','moutiers'],
+  legs:[{t:'05:52',lieu:'Lille Flandres',what:'TGV INOUI 7200 puis TGV INOUI 6429',dir:'descendre à Paris Gare du Nord (07:09), puis TGV 08:26 Paris Gare de Lyon, direction Bourg-Saint-Maurice, descendre à Moûtiers (12:48)',n:174,c:110,cn:'Trainline affiche 522 € pour 3 sans carte',link:tl('lilleF','moutiers','2026-12-28T05:30:00')},RERA,S62A('13:30')]}
+];
+const RETOUR=[
+ {m:'FlixBus direct de nuit',jour:'dim. 03/01',dep:'17:00',arr:'09:55',d:'17h',route:['moutiers','lille'],warn:'5 h d\'attente à Moûtiers, arrivée lun. 04/01',
+  legs:[S62R('17:00'),{t:'22:35',lieu:'Moûtiers, gare routière',what:'FlixBus',dir:'direction Lille, direct, arrivée Lille Europe lun. 04/01 à 09:55',n:65.32,link:fb('moutiers','lille','03.01.2027')}]},
+ {m:'OUIGO + FlixBus de nuit',jour:'dim. 03/01',dep:'17:00',arr:'06:30',d:'13h30',route:['moutiers','paris','lille'],warn:'Nuit à Paris Bercy, arrivée lun. 04/01',
+  legs:[S62R('17:00'),{t:'18:11',lieu:'Moûtiers gare',what:'OUIGO 7894',dir:'direction Paris, direct, descendre à Paris Gare de Lyon (22:56)',n:89,cn:'267 € pour 3 sur Trainline',link:tl('moutiers','pgl','2027-01-03T18:00:00')},M14R,
+   {t:'03:25',lieu:'Paris Bercy Seine',what:'FlixBus',dir:'direction Lille, arrivée Lille Europe lun. 04/01 à 06:30',n:16.99,link:fb('paris','lille','04.01.2027')}]},
+ {m:'TER + TGV via Lyon',jour:'dim. 03/01',dep:'14:05',arr:'21:58',d:'7h53',route:['moutiers','lyon','lille'],
+  legs:[S62R('14:05'),{t:'15:14',lieu:'Moûtiers gare',what:'TER puis TGV 9882',dir:'direction Lyon, descendre à Lyon Part-Dieu (18:10), puis TGV 19:00 direction Lille, arrivée Lille Europe (21:58)',n:159.60,cn:'Trainline affiche 478,80 € pour 3 sans carte ; Philibert paiera un peu moins avec sa carte',link:tl('moutiers','lilleE','2027-01-03T15:00:00')}]}
+,
+ {m:'FlixBus direct de nuit',jour:'sam. 02/01',dep:'17:55',arr:'09:55',d:'16h',route:['moutiers','lille'],warn:'Arrivée dim. 03/01 au matin',
+  legs:[S62R('17:55'),{t:'22:35',lieu:'Moûtiers, gare routière',what:'FlixBus',dir:'direction Lille, direct, arrivée Lille Europe dim. 03/01 à 09:55',n:84.32,link:fb('moutiers','lille','02.01.2027')}]},
+ {m:'Bus + bus, nuit à Lyon',jour:'sam. 02/01',dep:'17:55',arr:'18:15',d:'24h20',route:['moutiers','lyon','lille'],warn:'Nuit à la gare routière de Lyon',
+  legs:[S62R('17:55'),{t:'22:35',lieu:'Moûtiers, gare routière',what:'FlixBus',dir:'direction Lyon, descendre à Lyon Gerland (00:55)',n:21.32,link:fb('moutiers','lyon','02.01.2027')},
+   {t:'08:30',lieu:'Lyon Gerland',what:'BlaBlaCar Bus',dir:'direction Lille, direct, arrivée Lille Europe dim. 03/01 à 18:15',n:42.99,cn:'prix Kombo, frais compris : clique l\'onglet « Bus » en haut des résultats',link:kb('2027-01-03','Lyon','Lille',18,11)}]},
+ {m:'TGV direct',jour:'sam. 02/01',dep:'14:00',arr:'22:45',d:'8h45',route:['moutiers','lille'],
+  legs:[S62R('14:00'),{t:'16:23',lieu:'Moûtiers gare',what:'TGV INOUI 5196',dir:'direction Lille, direct, arrivée Lille Flandres (22:45)',n:161,c:89,cn:'Trainline affiche 483 € pour 3 sans carte',link:tl('moutiers','lilleF','2027-01-02T16:00:00')}]}
+];
+/* ---------- calculs ---------- */
+const eur=n=>{n=Math.round(n*100)/100;return n.toLocaleString('fr-FR',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+' €';};
+function cost(o){let n=0,c=0;o.legs.forEach(l=>{if(l.n==null)return;n+=l.n;c+=(l.c??l.n);});return {n,c,t:2*n+c};}
+[...ALLER,...RETOUR].forEach(o=>o.k=cost(o));
+ALLER.sort((a,b)=>a.k.t-b.k.t); RETOUR.sort((a,b)=>a.k.t-b.k.t);
+let sa=0, sr=Math.max(0,RETOUR.findIndex(o=>o.jour==='dim. 03/01')), open=null;
+
+function legHtml(l){
+  let p;
+  if(l.n==null) p='<small>inclus</small>';
+  else if(l.n===0) p='<small>'+(l.cn||'')+'</small>';
+  else p=eur(l.n)+(l.c!=null&&l.c!==l.n?`<small>Philibert ${eur(l.c)}</small>`:'')+(l.cn?`<small>${l.cn}</small>`:'');
+  return `<div class="leg"><span class="t">${l.t||''}</span><span><span class="what">${l.what}</span> · ${l.lieu}<br><span class="dir">${l.dir}</span></span><span class="pp">${p}</span>${l.link?`<a href="${l.link[1]}" target="_blank" rel="noopener">${l.link[0]}</a>`:''}</div>`;
+}
+function card(o,i,ret){
+  const sel=(ret?sr:sa)===i, isOpen=open===(ret?'r':'a')+i, k=o.k, diff=k.n!==k.c;
+  return `<div class="opt${sel?' on':''}${isOpen?' open':''}">
+   <div class="head" data-i="${i}" data-r="${ret?1:0}">
+    <div class="row1"><span class="mode">${o.m}${o.jour?' · '+o.jour:''}</span><span class="prix">${eur(k.n)}<small> /pers.</small></span></div>
+    <div class="hrs"><span>${o.dep}</span><i></i><span>${o.arr}</span></div>
+    <div class="meta">${ret?'Valmorel à Lille':'Lille à Valmorel'} en ${o.d}${diff?' · Philibert '+eur(k.c):''} · ${eur(k.t)} pour 3</div>
+    <div class="tags">${i===0?'<span class="tag best">le moins cher</span>':''}${o.warn?`<span class="tag warn">${o.warn}</span>`:''}</div>
+    <div class="more">${isOpen?'Masquer le détail':'Voir le détail du prix'}</div>
+   </div>
+   <div class="detail">${o.legs.map(legHtml).join('')}
+    <div class="sum">Sofian et Jules : <b>${eur(k.n)}</b> chacun${diff?` · Philibert : <b>${eur(k.c)}</b>`:''}<br>Pour 3 : ${diff?`2 x ${eur(k.n)} + ${eur(k.c)}`:`3 x ${eur(k.n)}`} = <b>${eur(k.t)}</b></div>
+   </div></div>`;
+}
+function render(){
+  document.getElementById('aller').innerHTML=ALLER.map((o,i)=>card(o,i,false)).join('');
+  document.getElementById('retour').innerHTML=RETOUR.map((o,i)=>card(o,i,true)).join('');
+  const a=ALLER[sa], r=RETOUR[sr], t=a.k.t+r.k.t, n=a.k.n+r.k.n, c=a.k.c+r.k.c;
+  ['tot3','mtot'].forEach(id=>document.getElementById(id).textContent=eur(t));
+  document.getElementById('totpp').textContent=eur(t/3);
+  document.getElementById('mpp').textContent=`pour 3 · Sofian et Jules ${eur(n)}, Philibert ${eur(c)}`;
+  document.getElementById('split').textContent=`Sofian et Jules : ${eur(n)} chacun · Philibert : ${eur(c)}`;
+  const li=(l,cls)=>`<li><span class="t">${l.t||''}</span><span class="b ${cls}"></span><span>${l.what} · ${l.lieu}<small>${l.dir}</small></span></li>`;
+  document.getElementById('steps').innerHTML=`<li><span class="t"></span><span></span><span class="meta">Aller ${a.jour}</span></li>`+a.legs.map(l=>li(l,'')).join('')
+   +`<li><span class="t">${a.arr}</span><span class="b"></span><span>Valmorel, le chalet</span></li>`
+   +`<li><span class="sep" style="grid-column:1/4"></span></li><li><span class="t"></span><span></span><span class="meta">Retour ${r.jour}</span></li>`
+   +r.legs.map(l=>li(l,'r')).join('');
+  draw(a,r);
+}
+document.addEventListener('click',e=>{if(e.target.closest('a'))return; const h=e.target.closest('.head'); if(!h)return; const i=+h.dataset.i, ret=h.dataset.r==='1', key=(ret?'r':'a')+i;
+  if(ret)sr=i; else sa=i; open=open===key?null:key; render();});
+
+/* ---------- carte ---------- */
+const P={lille:[50.6366,3.0705],paris:[48.8443,2.3744],lyon:[45.7606,4.8593],chambery:[45.5714,5.9195],moutiers:[45.4851,6.5315],valmorel:[45.4614,6.4436]};
+const NOMS={lille:'Lille',paris:'Paris',lyon:'Lyon',chambery:'Chambéry',moutiers:'Moûtiers',valmorel:'Valmorel'};
+const map=L.map('map',{scrollWheelZoom:false,zoomControl:false,dragging:!L.Browser.mobile,tap:false});
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles &copy; Esri'}).addTo(map);
+const layer=L.layerGroup().addTo(map);
+function draw(a,r){
+  layer.clearLayers(); const css=getComputedStyle(document.documentElement);
+  L.polyline([...a.route,'valmorel'].map(k=>P[k]),{color:css.getPropertyValue('--sel').trim(),weight:5}).addTo(layer);
+  L.polyline(['valmorel',...r.route].map(k=>P[k]),{color:css.getPropertyValue('--ret').trim(),weight:4,dashArray:'8 8'}).addTo(layer);
+  new Set([...a.route,...r.route,'valmorel']).forEach(k=>L.circleMarker(P[k],{radius:5,color:'#111',weight:2,fillColor:'#fff',fillOpacity:1}).bindTooltip(NOMS[k],{permanent:['lille','paris','lyon','valmorel'].includes(k),direction:k==='lyon'?'left':'right'}).addTo(layer));
+  map.fitBounds(L.latLngBounds(Object.values(P)),{padding:[20,20]});
+}
+render();
+</script>
+</body>
+</html>
