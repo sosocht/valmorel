@@ -3,95 +3,107 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Lille - Valmorel</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* 5 niveaux : label 12, bouton 14 (500), texte 14, titre de section 18, titre de page 30 */
-:root{--bg:#f4f5f7;--card:#fff;--ink:#111;--mute:#6b7280;--line:#e5e7eb;--soft:#f3f4f6;--sel:#1D9BF0;--ok:#008000;--warn:#c2410c;--ret:#111}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1013;--card:#181b20;--ink:#f3f4f6;--mute:#9ca3af;--line:#2a2f36;--soft:#21252b;--warn:#fb923c;--ret:#f3f4f6}}
+/* 5 niveaux de texte : label 12, texte 14, bouton 14 (600), titre de section 18, titre de page 30 */
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro",system-ui,"Helvetica Neue",sans-serif;
+  --bg:#f2f2f7;--card:#ffffff;--label:#000;--label2:rgba(60,60,67,.66);--label3:rgba(60,60,67,.3);--sep:rgba(60,60,67,.14);
+  --bleu:#007AFF;--vert:#34C759;--orange:#FF9500;--rouge:#FF3B30;--noir:#1c1c1e;
+  --ombre:0 1px 2px rgba(0,0,0,.06),0 6px 20px rgba(0,0,0,.06);--fill:rgba(120,120,128,.12);
+  --txtvert:#1f8a3b;--txtorange:#b25000;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#000;--card:#1c1c1e;--label:#fff;--label2:rgba(235,235,245,.62);--label3:rgba(235,235,245,.3);--sep:rgba(84,84,88,.6);
+  --bleu:#0A84FF;--vert:#30D158;--orange:#FF9F0A;--rouge:#FF453A;--noir:#f2f2f7;
+  --ombre:none;--fill:rgba(120,120,128,.24);--txtvert:#30D158;--txtorange:#FF9F0A;}}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--ink);font:400 14px/1.45 'Plus Jakarta Sans',system-ui,sans-serif;display:flex;flex-direction:column;gap:14px;padding:16px 20px}
-header{display:flex;align-items:center;justify-content:space-between;gap:24px;flex:none}
-h1{font-size:30px;font-weight:600;margin:0}
-.sub{color:var(--mute);margin-top:2px}
-.total{display:flex;gap:28px;align-items:baseline;text-align:right}
-.total b{font-size:30px;font-weight:600;display:block;line-height:1.1}
-.total span{font-size:12px;color:var(--mute)}
-.grid{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr);gap:16px}
+body{background:var(--bg);color:var(--label);font:400 14px/1.4 var(--font);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;gap:16px;padding:20px 24px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex:none}
+h1{font-size:30px;font-weight:700;letter-spacing:-.4px;margin:0;line-height:1.1}
+.sub{color:var(--label2);margin-top:4px}
+.total{display:flex;gap:32px;text-align:right;white-space:nowrap}
+.total b{display:block;font-size:30px;font-weight:700;letter-spacing:-.4px;line-height:1.1;font-variant-numeric:tabular-nums}
+.total span{font-size:12px;color:var(--label2)}
+main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(380px,1.5fr) minmax(0,1fr) minmax(0,1fr);gap:16px}
+/* carte : grand panneau gauche, plein cadre */
+.carte{position:relative;border-radius:22px;overflow:hidden;box-shadow:var(--ombre);background:var(--card);min-height:0}
+#map{position:absolute;inset:0}
+.verre{position:absolute;left:12px;right:12px;bottom:12px;border-radius:16px;padding:12px 14px;background:color-mix(in srgb,var(--card) 82%,transparent);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:0 0 0 .5px var(--sep),0 8px 24px rgba(0,0,0,.18);z-index:500;display:grid;gap:6px}
+.verre .ln{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.verre .k{font-size:12px;color:var(--label2)}
+.verre b{font-weight:600}
+.leg-ln{display:flex;gap:14px;font-size:12px;color:var(--label2);flex-wrap:wrap}
+.leg-ln i{display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--bleu)}
+.leg-ln i.r{background:none;height:0;border-top:3px dotted var(--noir)}
+/* colonnes */
 .col{display:flex;flex-direction:column;min-height:0;gap:10px}
-.col>h2{font-size:18px;font-weight:600;margin:0;display:flex;align-items:center;gap:8px;flex:none}
-.col>h2 i{width:10px;height:10px;border-radius:50%;background:var(--sel)}
-.ret>h2 i{background:var(--ret)}
-.liste{overflow:auto;display:flex;flex-direction:column;gap:10px;padding:3px 3px 12px;min-height:0}
-.liste::-webkit-scrollbar{width:6px}.liste::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
-.opt{flex:none;background:var(--card);border:2px solid var(--line);border-radius:20px;overflow:hidden}
-.opt.on{border-color:var(--sel)}
-.ret .opt.on{border-color:var(--ret)}
-.head{padding:12px 16px;cursor:pointer;user-select:none;display:grid;gap:4px}
+.col>h2{font-size:18px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;flex:none}
+.col>h2 i{width:10px;height:10px;border-radius:50%;background:var(--bleu)}
+.col.ret>h2 i{background:var(--noir)}
+.liste{overflow:auto;display:flex;flex-direction:column;gap:10px;padding:3px 3px 8px;min-height:0}
+.liste::-webkit-scrollbar{width:0}
+.opt{flex:none;background:var(--card);border-radius:18px;box-shadow:var(--ombre);border:2px solid transparent;overflow:hidden}
+.opt.on{border-color:var(--bleu)}
+.ret .opt.on{border-color:var(--noir)}
+.head{padding:12px 16px;cursor:pointer;user-select:none;display:grid;gap:3px}
 .r1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .mode{font-weight:600}
-.prix{font-size:18px;font-weight:600;white-space:nowrap}
-.hrs{display:flex;align-items:center;gap:10px}
-.hrs i{flex:1;height:2px;background:var(--line)}
+.prix{font-size:18px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hrs{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums}
+.hrs i{flex:1;height:3px;border-radius:2px;background:var(--fill)}
 .hrs b{font-weight:600}
-.meta{color:var(--mute);font-size:12px}
-.best{color:var(--ok);font-weight:600;font-size:12px}
-.warn{color:var(--warn);font-size:12px}
-.detail{display:none;border-top:1px solid var(--line);background:var(--soft);padding:6px 16px 12px}
+.meta{color:var(--label2);font-size:12px}
+.best{color:var(--txtvert);font-weight:600;font-size:12px}
+.warn{color:var(--txtorange);font-size:12px}
+.detail{display:none;border-top:.5px solid var(--sep);padding:4px 16px 12px}
 .opt.open .detail{display:block}
-.leg{display:grid;grid-template-columns:44px 1fr auto;gap:2px 10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.leg{display:grid;grid-template-columns:42px 1fr auto;gap:2px 10px;padding:9px 0;border-bottom:.5px solid var(--sep)}
 .leg:last-of-type{border-bottom:0}
-.leg .t{font-weight:600}
-.leg .dir{color:var(--mute);font-size:12px;display:block}
+.leg .t{font-weight:600;font-variant-numeric:tabular-nums}
+.leg .dir{color:var(--label2);font-size:12px;display:block}
 .leg .pp{text-align:right;font-weight:600;white-space:nowrap}
-.leg .pp small{display:block;font-weight:400;color:var(--mute);font-size:12px;white-space:normal;max-width:150px;margin-left:auto}
-.leg a{grid-column:2 / 4;justify-self:start;font-weight:500;color:var(--sel);text-decoration:none}
-.sum{padding-top:8px;border-top:1px solid var(--line)}
-.side{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto}
-.box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 16px}
-.box h3{margin:0 0 8px;font-size:18px;font-weight:600}
-.steps{list-style:none;margin:0;padding:0}
-.steps li{display:grid;grid-template-columns:44px 14px 1fr;gap:8px;padding:3px 0}
-.steps .t{font-weight:600;text-align:right}
-.steps .b{width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--sel)}
-.steps .b.r{background:var(--ret)}
-.steps small{display:block;color:var(--mute);font-size:12px}
-.steps .sep{display:block;border-top:1px solid var(--line);margin:6px 0}
-.reducs{flex:none;display:grid;grid-template-columns:110px 1fr;gap:8px 12px;align-items:center;padding:10px 16px}.reducs h3{margin:0}.reduc{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.reduc div b{font-weight:600}
-.reduc small{display:block;color:var(--mute);font-size:12px}
-#map{flex:1;min-height:150px;border-radius:20px;overflow:hidden}
-.note{color:var(--mute);font-size:12px}
-.bar{display:none}
-@media (max-width:1100px){.reducs{grid-template-columns:1fr}.reduc{grid-template-columns:1fr}body{height:auto}.grid{grid-template-columns:1fr 1fr}.side{grid-column:1 / 3}}
-@media (max-width:700px){
- header{flex-direction:column;align-items:flex-start}
- .grid{grid-template-columns:1fr}.side{grid-column:auto}
- .bar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:1000;background:var(--ink);color:var(--bg);padding:12px 16px;justify-content:space-between;align-items:center;gap:10px}
- .bar b{font-size:18px;font-weight:600}
- .bar span{font-size:12px;opacity:.75;display:block}
- .bar a{color:var(--bg);font-weight:500;text-decoration:none}
-}
+.leg .pp small{display:block;font-weight:400;color:var(--label2);font-size:12px;white-space:normal;max-width:150px;margin-left:auto}
+.leg a{grid-column:2 / 4;justify-self:start;font-weight:600;color:var(--bleu);text-decoration:none}
+.sum{padding-top:8px;border-top:.5px solid var(--sep)}
+/* pied : réductions et notes */
+footer{flex:none;display:grid;grid-template-columns:repeat(3,1fr) auto;gap:20px;align-items:center;background:var(--card);border-radius:18px;box-shadow:var(--ombre);padding:12px 18px}
+footer b{display:block;font-weight:600}
+footer small{display:block;color:var(--label2);font-size:12px}
+.chg{font:inherit;font-weight:600;color:var(--bleu);background:var(--fill);border:0;border-radius:10px;padding:8px 14px;cursor:pointer;white-space:nowrap}
+#chg-panneau{display:none;position:fixed;right:24px;bottom:96px;width:min(520px,calc(100vw - 48px));max-height:70vh;overflow:auto;background:var(--card);border-radius:20px;padding:18px 20px;box-shadow:0 0 0 .5px var(--sep),0 20px 50px rgba(0,0,0,.28);z-index:2000}
+#chg-panneau.ouvert{display:block}
+#chg-panneau h3{margin:0 0 8px;font-size:18px;font-weight:700}
+#chg-panneau .l{display:grid;grid-template-columns:1fr auto;gap:12px;padding:7px 0;border-bottom:.5px solid var(--sep)}
+#chg-panneau .l:last-child{border-bottom:0}
+#chg-panneau .v{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.haut{color:var(--rouge)}.bas{color:var(--txtvert)}
+.note{grid-column:1/-1;color:var(--label2);font-size:12px;border-top:.5px solid var(--sep);padding-top:8px}
+@media (max-width:1100px){body{height:auto}main{grid-template-columns:1fr 1fr}.carte{grid-column:1/-1;height:420px}footer{grid-template-columns:1fr}}
+@media (max-width:700px){main{grid-template-columns:1fr}.total{gap:18px}header{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
 <body>
 <header>
   <div><h1>Lille - Valmorel</h1><div class="sub" id="sub"></div></div>
-  <div class="total"><div><b id="tot2"></b><span>pour vous 2, tout compris</span></div><div><b id="totpp"></b><span>par personne</span></div></div>
+  <div class="total"><div><b id="tot2"></b><span>pour vous 2</span></div><div><b id="totpp"></b><span>par personne</span></div></div>
 </header>
-<div class="grid">
+<main>
+  <div class="carte"><div id="map"></div>
+    <div class="verre"><div class="ln"><span class="k">Aller</span><b id="rAller"></b></div><div class="ln"><span class="k">Retour</span><b id="rRetour"></b></div>
+      <div class="leg-ln"><span><i></i>Aller</span><span><i class="r"></i>Retour</span></div></div></div>
   <div class="col"><h2><i></i>Aller</h2><div class="liste" id="aller"></div></div>
   <div class="col ret"><h2><i></i>Retour</h2><div class="liste" id="retour"></div></div>
-  <div class="side" id="trajet">
-    <div class="box"><h3>Ton trajet</h3><ul class="steps" id="steps"></ul></div>
-    <div id="map"></div>
-      </div>
-</div>
-<footer class="box reducs"><h3>Réductions</h3><div class="reduc" id="reduc"></div><div class="note" id="note" style="grid-column:1/3"></div></footer>
-<div class="bar"><div><b id="mtot"></b><span id="mpp"></span></div><a href="#trajet">Voir le trajet</a></div>
+</main>
+<footer>
+  <div id="reduc" style="display:contents"></div>
+  <button class="chg" id="bChg">Changements depuis le 02/11 et notes</button>
+  </footer>
+<div id="chg-panneau"><h3>Depuis le 02/11, par personne</h3><div id="chg"></div><div class="note" id="note" style="margin-top:12px;border-top:.5px solid var(--sep);padding-top:10px"></div></div>
 
 <script>
 const INFO={
@@ -161,14 +173,32 @@ const RETOUR=[
   legs:[S62R('14:05'),{t:'15:14',lieu:'Moûtiers gare',what:'TER puis TGV INOUI',dir:'changement à Lyon Part-Dieu, arrivée à Lille Europe 21:58',n:319.2,link:SNCF}]}
 ];
 
-/* ---------- calculs : tout est pour 2 personnes (Sofian et Jules), prix p = par personne ---------- */
-const eur=n=>{n=Math.round(n*100)/100;return n.toLocaleString('fr-FR',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+' €';};
+/* ce qui a bougé depuis le relevé du 02/11, par personne (avant, après) */
+const CHANGES=[
+ {t:'TGV direct Moûtiers, Lille du sam. 02/01 (16:23)',v:'plus de place en 2de classe',dir:'haut'},
+ {t:'FlixBus de nuit Lille, Lyon 19:50',v:'55,99 € à 67,49 €',dir:'haut'},
+ {t:'FlixBus de nuit Lille, Lyon 21:55',v:'62,99 € à 57,49 €',dir:'bas'},
+ {t:'OUIGO Paris, Lyon 12:30',v:'39 € à 55 €',dir:'haut'},
+ {t:'OUIGO Paris, Moûtiers 28/12',v:'85 € à 89 €',dir:'haut'},
+ {t:'OUIGO Moûtiers, Paris dim. 03/01',v:'89 € à 99 €',dir:'haut'},
+ {t:'FlixBus Moûtiers, Lille sam. 02/01 (direct)',v:'84,32 € à 146,49 €',dir:'haut'},
+ {t:'TGV 08:12 + OUIGO Lille, Moûtiers',v:'119 € à 130 €',dir:'haut'},
+ {t:'BlaBlaCar Bus Lyon, Lille 08:30',v:'42,99 € à 41,49 €',dir:'bas'},
+ {t:'TER Lyon, Moûtiers (tarif promo)',v:'inchangé, 22,60 €',dir:''},
+ {t:'Bus S62, aller-retour jeune',v:'inchangé, 13,50 €',dir:''}
+];
+
+const eur=n=>{n=Math.round(n*100)/100;return n.toLocaleString('fr-FR',{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+' €';};
 const cost=o=>o.legs.reduce((s,l)=>s+(l.n||0),0);
 [...ALLER,...RETOUR].forEach(o=>o.k=cost(o));
 ALLER.sort((a,b)=>a.k-b.k); RETOUR.sort((a,b)=>a.k-b.k);
 let sa=0, sr=Math.max(0,RETOUR.findIndex(o=>o.jour==='dim. 03/01')), open=null;
 document.getElementById('sub').textContent=INFO.sub;
 document.getElementById('note').textContent=INFO.note;
+document.getElementById('chg').innerHTML=CHANGES.map(c=>`<div class="l"><span>${c.t}</span><span class="v ${c.dir}">${c.v}</span></div>`).join('');
+document.getElementById('bChg').onclick=()=>document.getElementById('chg-panneau').classList.toggle('ouvert');
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('chg-panneau').classList.remove('ouvert')});
+document.getElementById('reduc').innerHTML=REDUC.map(x=>`<div><b>${x.nom}</b><small>${x.detail}</small></div>`).join('');
 
 function legHtml(l){
   const p=l.n==null?'<small>inclus</small>':l.n===0?'<small>'+(l.cn||'')+'</small>':eur(l.n)+(l.cn?`<small>${l.cn}</small>`:'');
@@ -189,34 +219,38 @@ function render(){
   document.getElementById('aller').innerHTML=ALLER.map((o,i)=>card(o,i,false)).join('');
   document.getElementById('retour').innerHTML=RETOUR.map((o,i)=>card(o,i,true)).join('');
   const a=ALLER[sa], r=RETOUR[sr], t=a.k+r.k;
-  ['tot2','mtot'].forEach(id=>document.getElementById(id).textContent=eur(t));
+  document.getElementById('tot2').textContent=eur(t);
   document.getElementById('totpp').textContent=eur(t/2);
-  document.getElementById('mpp').textContent=`pour 2 · ${eur(t/2)} chacun`;
-  const li=(l,cls)=>`<li><span class="t">${l.t||''}</span><span class="b ${cls}"></span><span>${l.what} · ${l.lieu}<small>${l.dir}</small></span></li>`;
-  document.getElementById('steps').innerHTML=`<li><span class="t"></span><span></span><span class="meta">Aller ${a.jour}</span></li>`+a.legs.map(l=>li(l,'')).join('')
-   +`<li><span class="t">${a.arr}</span><span class="b"></span><span>Valmorel, le chalet</span></li>`
-   +`<li><span class="sep" style="grid-column:1/4"></span></li><li><span class="t"></span><span></span><span class="meta">Retour ${r.jour}</span></li>`
-   +r.legs.map(l=>li(l,'r')).join('');
-  document.getElementById('reduc').innerHTML=REDUC.length?REDUC.map(x=>`<div><b>${x.nom}</b><small>${x.detail}</small></div>`).join(''):'<small>Aucune réduction vérifiée pour ces trajets.</small>';
+  document.getElementById('rAller').textContent=`${a.m} · ${a.dep} à ${a.arr}`;
+  document.getElementById('rRetour').textContent=`${r.m} · ${r.dep} à ${r.arr}`;
   draw(a,r);
 }
-document.addEventListener('click',e=>{if(e.target.closest('a'))return; const h=e.target.closest('.head'); if(!h)return; const i=+h.dataset.i, ret=h.dataset.r==='1', key=(ret?'r':'a')+i;
+document.addEventListener('click',e=>{if(e.target.closest('a')||e.target.closest('.chg'))return; const h=e.target.closest('.head'); if(!h)return; const i=+h.dataset.i, ret=h.dataset.r==='1', key=(ret?'r':'a')+i;
   if(ret)sr=i; else sa=i; open=open===key?null:key; render();});
 
-/* ---------- carte ---------- */
+/* ---------- carte grand format, centrée sur l'itinéraire ---------- */
 const P={lille:[50.6366,3.0705],paris:[48.8443,2.3744],lyon:[45.7606,4.8593],chambery:[45.5714,5.9195],moutiers:[45.4851,6.5315],valmorel:[45.4614,6.4436]};
 const NOMS={lille:'Lille',paris:'Paris',lyon:'Lyon',chambery:'Chambéry',moutiers:'Moûtiers',valmorel:'Valmorel'};
-const map=L.map('map',{scrollWheelZoom:false,zoomControl:false,dragging:!L.Browser.mobile,tap:false});
-L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles &copy; Esri'}).addTo(map);
+const map=L.map('map',{scrollWheelZoom:true,zoomControl:true,attributionControl:true});
+const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/'+(dark?'World_Dark_Gray_Base':'World_Light_Gray_Base')+'/MapServer/tile/{z}/{y}/{x}',{maxZoom:12,attribution:'Tiles &copy; Esri'}).addTo(map);
 const layer=L.layerGroup().addTo(map);
+const ETIQ=['lille','paris','lyon','valmorel'];
+function pin(k){
+  if(!ETIQ.includes(k)) return L.circleMarker(P[k],{radius:6,color:'#1c1c1e',weight:3,fillColor:'#fff',fillOpacity:1});
+  return L.marker(P[k],{icon:L.divIcon({className:'',html:`<div style="display:flex;align-items:center;gap:6px;${k==='lyon'?'flex-direction:row-reverse;transform:translate(calc(-100% + 8px),-8px)':'transform:translate(-8px,-8px)'}"><span style="width:16px;height:16px;border-radius:50%;background:#fff;border:4px solid #1c1c1e;box-shadow:0 1px 4px rgba(0,0,0,.4);flex:none"></span><span style="font:600 14px -apple-system,system-ui,sans-serif;color:#1c1c1e;background:rgba(255,255,255,.95);padding:3px 9px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.25);white-space:nowrap">${NOMS[k]}</span></div>`,iconSize:[0,0]})});
+}
 function draw(a,r){
   layer.clearLayers(); const css=getComputedStyle(document.documentElement);
-  L.polyline([...a.route,'valmorel'].map(k=>P[k]),{color:css.getPropertyValue('--sel').trim(),weight:5}).addTo(layer);
-  L.polyline(['valmorel',...r.route].map(k=>P[k]),{color:'#111',weight:4,dashArray:'8 8'}).addTo(layer);
-  new Set([...a.route,...r.route,'valmorel']).forEach(k=>L.circleMarker(P[k],{radius:5,color:'#111',weight:2,fillColor:'#fff',fillOpacity:1}).bindTooltip(NOMS[k],{permanent:['lille','paris','lyon','valmorel'].includes(k),direction:k==='lyon'?'left':'right'}).addTo(layer));
-  map.fitBounds(L.latLngBounds(Object.values(P)),{padding:[20,20]});
+  const bleu=css.getPropertyValue('--bleu').trim();
+  const ra=[...a.route,'valmorel'].map(k=>P[k]), rr=['valmorel',...r.route].map(k=>P[k]);
+  L.polyline(ra,{color:'#fff',weight:10,opacity:.9}).addTo(layer); L.polyline(ra,{color:bleu,weight:6}).addTo(layer);
+  L.polyline(rr,{color:'#fff',weight:9,opacity:.9}).addTo(layer); L.polyline(rr,{color:'#1c1c1e',weight:5,dashArray:'2 10',lineCap:'round'}).addTo(layer);
+  new Set([...a.route,...r.route,'valmorel']).forEach(k=>pin(k).addTo(layer));
+  map.fitBounds(L.latLngBounds(Object.values(P)),{paddingTopLeft:[40,40],paddingBottomRight:[40,110]});
 }
 render();
+new ResizeObserver(()=>{map.invalidateSize();draw(ALLER[sa],RETOUR[sr])}).observe(document.querySelector('.carte'));
 </script>
 </body>
 </html>
